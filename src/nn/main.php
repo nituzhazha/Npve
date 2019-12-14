@@ -2,7 +2,6 @@
 
 namespace nn;
 
-use pocketmine\event\player\PlayerJoinEvent;
 use pocketmine\plugin\PluginBase;
 use pocketmine\event\Listener;
 use pocketmine\command\Command;
@@ -10,11 +9,9 @@ use pocketmine\command\CommandSender;
 use pocketmine\entity\Entity;
 use pocketmine\math\Vector3;
 use pocketmine\utils\Config;
-use pocketmine\event\level\ChunkUnloadEvent;
 use nn\Utils\Converter;
 use nn\ReBirthTask;
 use pocketmine\Server;
-use pocketmine\event\player\PlayerMoveEvent;
 
 class main extends PluginBase implements Listener{
 	
@@ -58,6 +55,12 @@ $this->RBT((string)scandir($this->getDataFolder()."data/")[$i]);
 
        Entity::registerEntity(Npc::class, true);
 
+
+$this->getLogger()->info("本插件由nitu一人制作");
+$this->getLogger()->info("作者QQ1010340249");
+$this->getLogger()->info("已开源禁止盗卖");
+$this->getLogger()->info("github项目链接:https://github.com/nituzhazha/Npve");
+
 		$this->getServer()->getPluginManager()->registerEvents($this, $this);
 
 
@@ -99,7 +102,8 @@ if($args[0] == "set"){
            "position" => array(
            "x" =>(int)$sender->getX(),
            "y" =>(int)$sender->getY(),
-           "z" =>(int)$sender->getZ())
+           "z" =>(int)$sender->getZ()),
+           "ReBirthTime" => 2
 		   ]
 		   );#initial data
 
@@ -173,9 +177,10 @@ if(!file_exists($this->single."{$total}/"."config.yml") or !is_dir($this->single
 		$config = new Config($this->single."{$total}/"."config.yml",Config::YAML);
               $level = $config->get("level");
 		 $name = $config->get("name");
+              $time = $config->get("ReBirthTime");
              
 
-$this->getScheduler()->scheduleRepeatingTask(new ReBirthTask($this,$this->npc,$level,$name), 40);
+$this->getScheduler()->scheduleRepeatingTask(new ReBirthTask($this,$this->npc,$level,$name), $time*20);
 
 }
 
