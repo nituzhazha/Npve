@@ -10,10 +10,10 @@ use pocketmine\entity\Entity;
 use pocketmine\math\Vector3;
 use pocketmine\utils\Config;
 use nn\Utils\Converter;
-use nn\ReBirthTask;
+use nn\event\events;
 use pocketmine\Server;
 
-class main extends PluginBase implements Listener{
+class main extends PluginBase{
 	
 	public $npc = null;
 	public $level = null;
@@ -55,13 +55,16 @@ $this->RBT((string)scandir($this->getDataFolder()."data/")[$i]);
 
        Entity::registerEntity(Npc::class, true);
 
+       events::initial($this);
+
+     
+
+
 
 $this->getLogger()->info("本插件由nitu一人制作");
 $this->getLogger()->info("作者QQ1010340249");
 $this->getLogger()->info("已开源禁止盗卖");
 $this->getLogger()->info("github项目链接:https://github.com/nituzhazha/Npve");
-
-		$this->getServer()->getPluginManager()->registerEvents($this, $this);
 
 
 	}
@@ -103,13 +106,18 @@ if($args[0] == "set"){
            "x" =>(int)$sender->getX(),
            "y" =>(int)$sender->getY(),
            "z" =>(int)$sender->getZ()),
-           "ReBirthTime" => 2
+           "ReBirthTime" => 2,
+           "reward-money" => 10,
+           "reward-items" => [],
+           "reward-cmds" =>[]
+           
 		   ]
 		   );#initial data
 
 		$pz->save();
 
 		$this->spawnNpc($args[1]);
+                $this->RBT($args[1]);
 }
 
 		}
