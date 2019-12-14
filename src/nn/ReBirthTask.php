@@ -41,9 +41,10 @@ $this->switch += $entity->getMyName() == $this->npc->getMyName() ? 1 : 0;
 }
 }
 
-foreach($this->plugin->getServer()->getOnlinePlayers() as $player){
+/*foreach($this->plugin->getServer()->getOnlinePlayers() as $player){
 $player->sendMessage("{$this->switch}");
-}
+}*/
+#test
 
 
 
