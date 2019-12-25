@@ -6,11 +6,13 @@ use pocketmine\event\Listener;
 use pocketmine\plugin\Plugin;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
 use pocketmine\utils\Config;
+use pocketmine\math\Vector3;
 use pocketmine\Server;
 use pocketmine\command\ConsoleCommandSender;
 use onebone\economyapi\EconomyAPI;
 use pocketmine\item\Item;
 use nn\Npc;
+use nn\Task\ReBirthTask;
 use pocketmine\Player;
 
 class events implements Listener{
@@ -21,8 +23,6 @@ static public function initial(Plugin $plugin){
 self::$plugin = $plugin;
 $plugin->getServer()->getPluginManager()->registerEvents(new events(),$plugin);
 }
-
-
 
 
 public function reward(EntityDamageByEntityEvent $event){
@@ -42,6 +42,11 @@ $money = $config->get("reward-money");
 $item = $config->get("reward-items");
 $cmd = str_replace("@p",$damager->getName(), $config->get("reward-cmds"));
 
+$level = $config->get("level");
+$time = $config->get("ReBirthTime");
+             
+self::$plugin->getScheduler()->scheduleRepeatingTask(new ReBirthTask(self::$plugin,$level,$bodyname), $time*20);
+
 
 for($i=0;$i<count($item);$i++){
 $emm=explode(":",$item[$i]);
@@ -59,7 +64,7 @@ EconomyAPI::getInstance()->addMoney($damager, $money);
 $damager->sendMessage("§3您击杀§4{$bodyname}§3的奖励已经发送至您的背包");
 
 
-unset($bodyname,$config,$money,$item,$cmd);
+unset($bodyname,$config,$money,$item,$cmd,$level,$name,$time);
 }
 }
 unset($damage,$body,$damager);
