@@ -12,7 +12,6 @@ use pocketmine\network\mcpe\protocol\AddPlayerPacket;
 use pocketmine\network\mcpe\protocol\PlayerListPacket;
 use pocketmine\network\mcpe\protocol\types\PlayerListEntry;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
-use pocketmine\network\mcpe\protocol\types\SkinAdapterSingleton;
 
 class Npc extends Human
 {
@@ -26,9 +25,12 @@ class Npc extends Human
     public $damagedistance;
     public $pp;
     public $plugin;
+    public $BiggestLimit;
+    public $SmallestLimit;
+   
 
 
-    public function __construct(Level $level, CompoundTag $nbt,String $skindata ,$pos, $se, $name, $damage, $speed, $damagedistance, $plugin)
+    public function __construct(Level $level, CompoundTag $nbt,String $skindata ,$pos, $se, $name, $damage, $speed, $damagedistance,$plugin,$geometryName,$geometryData,$BiggestLimit,$SmallestLimit)
     {
         $this->server = $se;
         $this->pos = $pos;
@@ -36,14 +38,17 @@ class Npc extends Human
         $this->damage = $damage;
         $this->speed = $speed;
         $this->damagedistance = $damagedistance;
+        $this->BiggestLimit = $BiggestLimit;
+        $this->SmallestLimit = $SmallestLimit;
         $this->plugin = $plugin;
+        
 
         $this->setSkin(new Skin(
             "by rookie soil",
             $skindata,
 "",
-"",
-""
+$geometryName,
+$geometryData
         ));
 
         parent::__construct($level, $nbt);
@@ -72,7 +77,7 @@ class Npc extends Human
       
 
         foreach ($this->server->getOnlinePlayers() as $key => $pl) {
-            if ($pl->getPosition()->distance(new Vector3($ex, $ey, $ez)) <= 5) {
+            if ($pl->getPosition()->distance(new Vector3($ex, $ey, $ez)) <= $this->SmallestLimit) {
                 $this->pp = $pl;
             }
         }
@@ -89,7 +94,7 @@ class Npc extends Human
         $pz = $player->getZ();
 
 
-        if ($player->getPosition()->distance(new Vector3($ox, $oy, $oz)) <= 12) {
+        if ($player->getPosition()->distance(new Vector3($ox, $oy, $oz)) <= $this->BiggestLimit) {
 
             if ($px > $ex) {
                 $x = $this->speed;
@@ -180,13 +185,15 @@ public function setSkin(Skin $skin) : void{
     $this->skin->debloatGeometryData();
 }
 
-    public function sendSpawnPacket(Player $player) : void{
-	
+
+
+public function sendSpawnPacket(Player $player) : void{
+
 			$pk = new PlayerListPacket();
 			$pk->type = PlayerListPacket::TYPE_ADD;
-			$pk->entries = [PlayerListEntry::createAdditionEntry($this->uuid, $this->id, $this->getName(), SkinAdapterSingleton::get()->toSkinData($this->skin))];
+			$pk->entries = [PlayerListEntry::createAdditionEntry($this->uuid, $this->id, $this->getName(),$this->skin)];
 			$player->dataPacket($pk);
-	
+		
 
 		$pk = new AddPlayerPacket();
 		$pk->uuid = $this->getUniqueId();
@@ -199,17 +206,18 @@ public function setSkin(Skin $skin) : void{
 		$pk->item = $this->getInventory()->getItemInHand();
 		$pk->metadata = $this->propertyManager->getAll();
 		$player->dataPacket($pk);
-		
+
 		$this->sendData($player, [self::DATA_NAMETAG => [self::DATA_TYPE_STRING, $this->getNameTag()]]);
+
 		$this->armorInventory->sendContents($player);
+
 		
 			$pk = new PlayerListPacket();
 			$pk->type = PlayerListPacket::TYPE_REMOVE;
 			$pk->entries = [PlayerListEntry::createRemovalEntry($this->uuid)];
 			$player->dataPacket($pk);
-	
+		
 	}
-
     public function saveNBT(): void
     {
     }
