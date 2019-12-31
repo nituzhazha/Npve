@@ -5,6 +5,8 @@ namespace nn\event;
 use pocketmine\event\Listener;
 use pocketmine\plugin\Plugin;
 use pocketmine\event\entity\EntityDamageByEntityEvent;
+use pocketmine\event\entity\EntityDeathEvent;
+use pocketmine\event\level\ChunkUnloadEvent;
 use pocketmine\utils\Config;
 use pocketmine\math\Vector3;
 use pocketmine\Server;
@@ -24,29 +26,33 @@ self::$plugin = $plugin;
 $plugin->getServer()->getPluginManager()->registerEvents(new events(),$plugin);
 }
 
+public function rebirth(EntityDeathEvent $event){
 
-public function reward(EntityDamageByEntityEvent $event){
-
-$damage=$event->getBaseDamage();
 $body=$event->getEntity();
-$damager=$event->getDamager();
 
-if($damager instanceof Player and $body instanceof Npc){
-if($body->getHealth() <= $damage){
+if($body instanceof Npc){
 
 $bodyname=$body->getMyName();
 
 $config = new Config(self::$plugin->getDataFolder()."data/"."{$bodyname}/"."config.yml",Config::YAML);
 
+$level = $config->get("level");
+$time = $config->get("ReBirthTime");
+
+self::$plugin->getScheduler()->scheduleRepeatingTask(new ReBirthTask(self::$plugin,$level,$bodyname), $time*20);
+
+
+if($body->getLastDamageCause() instanceof EntityDamageByEntityEvent){
+
+$ev = $body->getLastDamageCause();
+
+$damager=$ev->getDamager();
+
 $money = $config->get("reward-money");
 $item = $config->get("reward-items");
 $cmd = str_replace("@p",$damager->getName(), $config->get("reward-cmds"));
 
-$level = $config->get("level");
-$time = $config->get("ReBirthTime");
-             
-self::$plugin->getScheduler()->scheduleRepeatingTask(new ReBirthTask(self::$plugin,$level,$bodyname), $time*20);
-
+if($damager instanceof Player){
 
 for($i=0;$i<count($item);$i++){
 $emm=explode(":",$item[$i]);
@@ -64,13 +70,41 @@ EconomyAPI::getInstance()->addMoney($damager, $money);
 $damager->sendMessage("§3您击杀§4{$bodyname}§3的奖励已经发送至您的背包");
 
 
-unset($bodyname,$config,$money,$item,$cmd,$level,$name,$time);
 }
-}
-unset($damage,$body,$damager);
+
+unset($ev,$damager,$money,$item,$cmd);
 }
 
 
+
+
+
+
+unset($bodyname,$level,$time);
+}
+unset($body);
+}
+
+
+
+
+
+public function chunkUnload(ChunkUnloadEvent $ev){
+foreach(self::$plugin->getServer()->getLevels() as $level){
+
+foreach($level->getEntities() as $entity){
+
+if($entity instanceof Npc){
+
+if($entity->level === $ev->getLevel() and $entity->chunk === $ev->getChunk()){
+			$ev->setCancelled(true);
+		}
+
+}
+}
+}
+unset($ev);
+	}
 
 
 
