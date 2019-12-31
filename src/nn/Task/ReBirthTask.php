@@ -4,6 +4,7 @@ namespace nn\Task;
 use pocketmine\scheduler\Task;
 use nn\main;
 use nn\Npc;
+use nn\particle\RebirthEffect;
 
 class ReBirthTask extends Task
 {
@@ -50,6 +51,9 @@ $player->sendMessage("{$this->switch}");
 
 
 if($this->switch == 0){
+$effect = new RebirthEffect($this->plugin);
+$effect->setEffect($this->name);
+unset($effect);
 $this->plugin->spawnNpc($this->name);
 $this->getHandler()->cancel();
 }else{
